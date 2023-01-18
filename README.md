@@ -25,6 +25,9 @@
 ### Customization
 There is several options you can change in the scripts file. They are located at the beginning of the file, including messages, permissions and default max homes size. You can also add new icons in the `on load` event using function `add_icon(item name)`.
 
+## Requirements (Dependencies)
+The only addon this script requires is [Skript-GUI](https://github.com/APickledWalrus/skript-gui) for it's GUI capabilities.
+
 ## TODO
 * **Add pages to the homes gui so you can see more than 28 homes.**
 * **Add max home limits for groups or find a way to use a permission like `saryhomes.maxhomes.6`.**
