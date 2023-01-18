@@ -1,0 +1,228 @@
+options:
+  # Messages
+  msg_nopermission: "&cYou have no permission to execute this command."
+
+  msg_home_invalid: "&cYou have no home with this name."
+  msg_home_nodefault: "&cYou have no default home, assign one in the GUI (/homes)"
+  msg_teleporting: "&aTeleporting to home..."
+  
+  msg_sethome_noargs: "&cYou have to specify a name for your new home."
+  msg_sethome_exists: "&cYou already have a home with this name."
+  msg_sethome_success: "&aYour new home has been created."
+
+  msg_delhome_noargs: "&cYou have to specify a name for the home you would like to delete."
+  msg_delhome_success: "&aHome has been deleted."
+
+  msg_maxhomes: "&cYou have reached your maximium limit of homes."
+
+  # Permissions
+  perm_home: "saryhomes.command.home"
+  perm_sethome: "saryhomes.command.sethome"
+  perm_delhome: "saryhomes.command.delhome"
+  perm_unlimited_homes: "saryhomes.unlimited"
+  perm_admin: "saryhomes.admin"
+
+  maxhomes: 10
+
+on load:
+  clear {-icons::*}
+  # Add any icons here using the add_icon function.
+  add_icon(GRASS BLOCK)
+  add_icon(DIRT)
+  add_icon(FARMLAND)
+  add_icon(PODZOL)
+  add_icon(SAND)
+  add_icon(OAK LOG)
+  add_icon(BIRCH LOG)
+  add_icon(SPRUCE LOG)
+  add_icon(DARK OAK LOG)
+  add_icon(JUNGLE LOG)
+  add_icon(ACACIA LOG)
+  add_icon(MANGROVE LOG)
+  add_icon(STONE)
+  add_icon(DEEPSLATE)
+  add_icon(SNOW BLOCK)
+  add_icon(NETHERRACK)
+  add_icon(CRIMSON NYLIUM)
+  add_icon(END STONE)
+
+function add_icon(item: item):
+  add {_item} to {-icons::*}
+
+command home [<string>]:
+  trigger:
+    if sender doesn't have permission {@perm_home}:
+      send {@msg_nopermission}
+      stop
+
+    set {_uuid} to uuid of sender
+
+    if arg 1 isn't set:
+      set {_home} to home_getdefault({_uuid})
+
+      if {_home} isn't set:
+        send {@msg_home_nodefault}
+        stop
+      
+      home_teleport(sender, home_getlocation({_uuid}, {_home}))
+      stop
+    
+    if (home_exists({_uuid}, arg 1) is false):
+      send {@msg_home_invalid}
+      stop
+
+    home_teleport(sender, home_getlocation({_uuid}, arg 1))
+
+command sethome [<string>]:
+  trigger:
+    if sender doesn't have permission {@perm_sethome}:
+      send {@msg_nopermission}
+      stop
+
+    if arg 1 isn't set:
+      send {@msg_sethome_noargs}
+      stop
+
+    set {_uuid} to uuid of sender
+    
+    if (home_exists({_uuid}, arg 1) is true):
+      send {@msg_sethome_exists}
+      stop
+    
+    if size of {saryhomes::%{_uuid}%::*} > {@maxhomes}:
+      if sender doesn't have permission {@perm_unlimited_homes} or {@perm_admin}:
+        send {@msg_maxhomes}
+        stop
+
+    home_add({_uuid}, arg 1, location of sender)
+    send {@msg_sethome_success}
+
+command delhome [<string>]:
+  trigger:
+    if sender doesn't have permission {@perm_delhome}:
+      send {@msg_nopermission}
+      stop
+
+    if arg 1 isn't set:
+      send {@msg_delhome_noargs}
+      stop
+    
+    set {_uuid} to uuid of sender
+    
+    if (home_exists({_uuid}, arg 1) is false):
+      send {@msg_home_invalid}
+      stop
+    
+    home_delete({_uuid}, arg 1)
+    send {@msg_delhome_success}
+
+command homes [<player>]:
+  trigger:
+    if sender doesn't have permission {@perm_home}:
+      send {@msg_nopermission}
+      stop
+    
+    if arg 1 isn't set:
+      homes_gui(sender, sender)
+      stop
+    
+    if sender doesn't have permission {@perm_admin}:
+      send {@msg_nopermission}
+      stop
+    
+    homes_gui(sender, arg 1)
+
+
+function home_add(uuid: string, name: string, location: location):
+  set {saryhomes::%{_uuid}%::%{_name}%} to {_name}
+  set {saryhomes::%{_uuid}%::%{_name}%::location} to {_location}
+  set {saryhomes::%{_uuid}%::%{_name}%::icon} to GRASS BLOCK
+
+function home_delete(uuid: string, name: string):
+  delete {saryhomes::%{_uuid}%::%{_name}%}
+
+function home_exists(uuid: string, name: string) :: boolean:
+  if {saryhomes::%{_uuid}%::%{_name}%} is set:
+    return true
+
+  return false
+
+function home_getdefault(uuid: string) :: string:
+  return {saryhomes::%{_uuid}%::default}
+
+function home_setdefault(uuid: string, name: string):
+  set {saryhomes::%{_uuid}%::default} to {_name}
+
+function home_getlocation(uuid: string, name: string) :: location:
+  return {saryhomes::%{_uuid}%::%{_name}%::location}
+
+function home_teleport(p: player, location: location):
+  teleport {_p} to {_location}
+  send {@msg_teleporting} to {_p}
+
+function change_icon(uuid: string, name: string, icon: item):
+  set {saryhomes::%{_uuid}%::%{_name}%::icon} to {_icon}
+
+function homes_gui(p: player, target: player):
+  set {_rows} to 6
+  set {_border} to BLACK STAINED GLASS PANE named " "
+  
+  create gui with virtual chest inventory with 6 rows named "%{_p}%'s Homes" with shape "xxxxxxxxx", "x1234567x", "x89abcdex", "xfghijklx", "xmnopqrsx" and "xxxxxxxxx":
+    make gui slot "x" with {_border} named " "
+    
+    set {_uuid} to uuid of {_target}
+    set {_default} to {saryhomes::%{_uuid}%::default}
+
+    loop {saryhomes::%{_uuid}%::*}:
+      set {_index} to loop-index
+      set {_value} to loop-value
+      set {_icon} to {saryhomes::%{_uuid}%::%{_index}%::icon}
+      set {_location} to {saryhomes::%{_uuid}%::%{_index}%::location}
+      set {_biome} to biome of {_location}
+
+      set {_lore::1} to ""
+      set {_lore::2} to "&fLocation:"
+      set {_lore::3} to " &7X: %x coord of {_location}%"
+      set {_lore::4} to " &7Y: %y coord of {_location}%"
+      set {_lore::5} to " &7Z: %z coord of {_location}%"
+      set {_lore::6} to ""
+      set {_lore::7} to "&fInfo:"
+      set {_lore::8} to " &7Biome: %{_biome}%" in uppercase
+      set {_lore::9} to ""
+      set {_lore::10} to "&aActions:"
+      set {_lore::11} to " &7L-Click: Goto"
+
+      if {_default} isn't {_value}:
+        set {_lore::12} to " &7M-Click: Make Default"
+
+      set {_lore::13} to " &7R-Click: Change Icon"
+
+      if {_default} is {_value}:
+        set {_name} to "&aHome: %{_value}% &7(DEFAULT)"
+      else:
+        set {_name} to "&aHome: %{_value}%"
+
+      make next gui slot with {_icon} named {_name} with lore {_lore::*}:
+        if gui click type is LEFT MOUSE BUTTON:
+          home_teleport({_p}, {_location})
+        
+        if gui click type is MIDDLE MOUSE BUTTON:
+          home_setdefault({_uuid}, {_value})
+          homes_gui({_p}, {_target})
+        
+        if gui click type is RIGHT MOUSE BUTTON:
+          homes_icons({_p}, {_target}, {_value})
+
+  open last gui for {_p}
+
+function homes_icons(p: player, target: player, name: string):
+  create gui with virtual chest inventory with 6 rows named "Pick An Icon (%{_name}%)" with shape "xxxxxxxxx", "x1234567x", "x89abcdex", "xfghijklx", "xmnopqrsx" and "xxxxxxxxx":
+    make gui slot "x" with BLACK STAINED GLASS PANE named " "
+    
+    loop {-icons::*}:
+      set {_icon} to loop-value
+      make next gui slot with {_icon}:
+        change_icon({_target}'s uuid, {_name}, {_icon})
+        homes_gui({_p}, {_target})
+  
+  open last gui for {_p}
