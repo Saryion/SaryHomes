@@ -5,7 +5,7 @@
 * Homes system with GUI
 * You can change the icon for each home in the GUI using right click.
 * `/home` will take you to your default home, which can be set in the GUI by middle clicking a home.
-* View infomation about your homes, such as it's location and biome it's in.
+* View information about your homes, such as it's location and biome it's in.
 * You can set a limit of max homes in the script file under `maxhomes`, defaulted to `10`. Player's with permission `saryhomes.unlimited` or `saryhomes.admin` can create unlimited homes.
 * Admins can open anyones home GUI with `/homes <player>` and permission `saryhomes.admin`
 
