@@ -25,11 +25,13 @@ options:
 
   gui_border_material: BLACK STAINED GLASS PANE
   homes_per_page: 28
+  icons_per_page: 28
 
 on load:
   clear {-icons::*}
   # Add any icons here using the add_icon function.
   add_icon(GRASS BLOCK)
+  add_icon(MOSS BLOCK)
   add_icon(DIRT)
   add_icon(FARMLAND)
   add_icon(PODZOL)
@@ -42,10 +44,16 @@ on load:
   add_icon(JUNGLE LOG)
   add_icon(ACACIA LOG)
   add_icon(MANGROVE LOG)
+  add_icon(WARPED STEM)
+  add_icon(CRIMSON STEM)
   add_icon(STONE)
+  add_icon(MOSSY COBBLESTONE)
+  add_icon(STONE BRICK)
   add_icon(DEEPSLATE)
   add_icon(BLOCK OF AMETHYST)
+  add_icon(PRISMARINE)
   add_icon(SNOW BLOCK)
+  add_icon(BLUE ICE)
   add_icon(NETHERRACK)
   add_icon(CRIMSON NYLIUM)
   add_icon(END STONE)
@@ -70,7 +78,7 @@ command home [<string>]:
         send {@msg_home_nodefault}
         stop
       
-      home_teleport(sender, arg 1, home_getlocation({_uuid}, {_home}))
+      home_teleport(sender, home_getdefault({_uuid}), home_getlocation({_uuid}, {_home}))
       stop
     
     if (home_exists({_uuid}, arg 1) is false):
@@ -188,7 +196,7 @@ function homes_gui(p: player, target: player, page: number):
   set {_rows} to 6
   set {_border} to {@gui_border_material} named " "
   
-  if (size of {saryhomes::%{_uuid}%::homes::*} > 28):
+  if (size of {saryhomes::%{_uuid}%::homes::*} > {@homes_per_page}):
     set {_title} to "%{_p}%'s Homes | Page %{_page}%"
   else:
     set {_title} to "%{_p}%'s Homes"
@@ -211,7 +219,7 @@ function homes_gui(p: player, target: player, page: number):
     else:
       make gui slot "t" with {_border}
     
-    if (size of {_homes::*} is 28):
+    if (size of {_homes::*} is {@homes_per_page}):
       make gui slot "u" with ARROW named "&aNext Page":
         homes_gui({_p}, {_target}, {_page} + 1)
     else:
@@ -252,22 +260,44 @@ function homes_gui(p: player, target: player, page: number):
         
         if gui click type is MIDDLE MOUSE BUTTON:
           home_setdefault({_uuid}, {_value})
-          homes_gui({_p}, {_target}, 1)
+          homes_gui({_p}, {_target}, {_page})
         
         if gui click type is RIGHT MOUSE BUTTON:
-          homes_icons({_p}, {_target}, {_value}, {_page})
+          homes_icons({_p}, {_target}, {_value}, {_page}, 1)
 
   open last gui for {_p}
 
-function homes_icons(p: player, target: player, name: string, page: number):
-  create gui with virtual chest inventory with 6 rows named "Choose An Icon (%{_name}%)" with shape "xxxxxxxxx", "x1234567x", "x89abcdex", "xfghijklx", "xmnopqrsx" and "xxxxxxxxx":
-    make gui slot "x" with {@gui_border_material} named " "
+function homes_icons(p: player, target: player, name: string, homespage: number, page: number):
+  set {_rows} to 6
+  set {_border} to {@gui_border_material} named " "
+  
+  if (size of {-icons::*} > {@icons_per_page}):
+    set {_title} to "Choose An Icon (%{_name}%) | Page %{_page}%"
+  else:
+    set {_title} to "Choose An Icon (%{_name}%)"
+
+  create gui with virtual chest inventory with {_rows} rows named {_title} with shape "xxxxxxxxx", "x1234567x", "x89abcdex", "xfghijklx", "xmnopqrsx" and "xxxtxuxxx":
+    make gui slot "x" with {_border} named " "
     
-    loop {-icons::*}:
+    set {_icons::*} to page {_page} of {-icons::*} with {@icons_per_page} lines
+
+    if {_page} != 1:
+      make gui slot "t" with ARROW named "&aPrevious Page":
+        homes_icons({_p}, {_target}, {_name}, {_homespage}, {_page} - 1)
+    else:
+      make gui slot "t" with {_border}
+    
+    if (size of {_icons::*} is {@icons_per_page}):
+      make gui slot "u" with ARROW named "&aNext Page":
+        homes_icons({_p}, {_target}, {_name}, {_homespage}, {_page} + 1)
+    else:
+      make gui slot "u" with {_border}
+
+    loop {_icons::*}:
       set {_icon} to loop-value
       make next gui slot with {_icon}:
         change_icon({_target}'s uuid, {_name}, {_icon})
-        homes_gui({_p}, {_target}, {_page})
+        homes_gui({_p}, {_target}, {_homespage})
   
   open last gui for {_p}
 
