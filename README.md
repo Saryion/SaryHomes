@@ -6,7 +6,7 @@
 * You can change the icon for each home in the GUI using right click.
 * `/home` will take you to your default home, which can be set in the GUI by middle clicking a home.
 * View information about your homes, such as it's location and biome it's in.
-* You can set a limit of max homes in the script file under `maxhomes`, defaulted to `10`. Player's with permission `saryhomes.unlimited` or `saryhomes.admin` can create unlimited homes.
+* You can set a limit of max homes by using the permission `saryhomes.maxhomes.<num>`. Player's with permission `saryhomes.unlimited` or `saryhomes.admin` can create unlimited homes.
 * Admins can open anyones home GUI with `/homes <player>` and permission `saryhomes.admin`
 
 ### Commands
@@ -19,6 +19,7 @@
 * `saryhomes.command.home`
 * `saryhomes.command.sethome`
 * `saryhomes.command.delhome`
+* `saryhomes.maxhomes.<num>`
 * `saryhomes.unlimited`
 * `saryhomes.admin`
 
@@ -30,7 +31,6 @@ The only addon this script requires is [Skript-GUI](https://github.com/APickledW
 
 ## TODO
 * **Add pages to the homes gui so you can see more than 28 homes.**
-* **Add max home limits for groups or find a way to use a permission like `saryhomes.maxhomes.6`.**
 
 ## Disclaimer
 I'm currently learning Skript, i'm very new. This is my first real project using it, and it's capabilities are pretty cool. So I know it's probably not as good as it can be, i'll improve in time.
