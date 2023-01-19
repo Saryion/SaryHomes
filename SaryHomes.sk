@@ -23,6 +23,8 @@ options:
   perm_unlimited_homes: "saryhomes.unlimited"
   perm_admin: "saryhomes.admin"
 
+  gui_border_material: BLACK STAINED GLASS PANE
+
 on load:
   clear {-icons::*}
   # Add any icons here using the add_icon function.
@@ -31,6 +33,7 @@ on load:
   add_icon(FARMLAND)
   add_icon(PODZOL)
   add_icon(SAND)
+  add_icon(TUBE CORAL BLOCK)
   add_icon(OAK LOG)
   add_icon(BIRCH LOG)
   add_icon(SPRUCE LOG)
@@ -40,10 +43,13 @@ on load:
   add_icon(MANGROVE LOG)
   add_icon(STONE)
   add_icon(DEEPSLATE)
+  add_icon(BLOCK OF AMETHYST)
   add_icon(SNOW BLOCK)
   add_icon(NETHERRACK)
   add_icon(CRIMSON NYLIUM)
   add_icon(END STONE)
+  add_icon(RED MUSHROOM BLOCK)
+  add_icon(SCULK)
 
 function add_icon(item: item):
   add {_item} to {-icons::*}
@@ -178,7 +184,7 @@ function change_icon(uuid: string, name: string, icon: item):
 
 function homes_gui(p: player, target: player):
   set {_rows} to 6
-  set {_border} to BLACK STAINED GLASS PANE named " "
+  set {_border} to {@gui_border_material} named " "
   
   create gui with virtual chest inventory with 6 rows named "%{_p}%'s Homes" with shape "xxxxxxxxx", "x1234567x", "x89abcdex", "xfghijklx", "xmnopqrsx" and "xxxxxxxxx":
     make gui slot "x" with {_border} named " "
@@ -230,7 +236,7 @@ function homes_gui(p: player, target: player):
 
 function homes_icons(p: player, target: player, name: string):
   create gui with virtual chest inventory with 6 rows named "Choose An Icon (%{_name}%)" with shape "xxxxxxxxx", "x1234567x", "x89abcdex", "xfghijklx", "xmnopqrsx" and "xxxxxxxxx":
-    make gui slot "x" with BLACK STAINED GLASS PANE named " "
+    make gui slot "x" with {@gui_border_material} named " "
     
     loop {-icons::*}:
       set {_icon} to loop-value
@@ -245,5 +251,5 @@ function send(p: player, msg: string, replace: string = "", replacewith: string 
     send {_msg} to {_p}
     stop
   
-  replace all {_replace} with {_replacewith} in {_msg}
+  replace {_replace} with {_replacewith} in {_msg}
   send {_msg} to {_p}
