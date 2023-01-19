@@ -205,7 +205,13 @@ function homes_gui(p: player, target: player, page: number):
     make gui slot "x" with {_border} named " "
     
     set {_lore::1} to ""
-    set {_lore::2} to "&7Owned: %size of {saryhomes::%{_p}'s uuid%::homes::*}% / %maxhomes({_p})%"
+    
+    if {_p} has permission {@perm_unlimited_homes} or {@perm_admin}:
+      set {_maxhomes} to "Unlimited"
+    else:
+      set {_maxhomes} to "%maxhomes({_p})%"
+    set {_lore::2} to "&7Owned: %size of {saryhomes::%{_p}'s uuid%::homes::*}% / %{_maxhomes}%"
+    
     set {_lore::3} to "&7Defaulted Home: %home_getdefault({_p}'s uuid)%"
 
     make gui slot "z" with KNOWLEDGE BOOK named "&aHome Info" with lore {_lore::*}
