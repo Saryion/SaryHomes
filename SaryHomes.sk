@@ -24,6 +24,7 @@ options:
   perm_admin: "saryhomes.admin"
 
   gui_border_material: BLACK STAINED GLASS PANE
+  homes_per_page: 28
 
 on load:
   clear {-icons::*}
@@ -128,14 +129,14 @@ command homes [<player>]:
       stop
     
     if arg 1 isn't set:
-      homes_gui(sender, sender)
+      homes_gui(sender, sender, 1)
       stop
     
     if sender doesn't have permission {@perm_admin}:
       send {@msg_nopermission}
       stop
     
-    homes_gui(sender, arg 1)
+    homes_gui(sender, arg 1, 1)
 
 
 function home_add(uuid: string, name: string, location: location):
@@ -182,11 +183,17 @@ function maxhomes(p: player) :: number:
 function change_icon(uuid: string, name: string, icon: item):
   set {saryhomes::%{_uuid}%::homes::%{_name}%::icon} to {_icon}
 
-function homes_gui(p: player, target: player):
+function homes_gui(p: player, target: player, page: number):
+  set {_uuid} to uuid of {_target}
   set {_rows} to 6
   set {_border} to {@gui_border_material} named " "
   
-  create gui with virtual chest inventory with 6 rows named "%{_p}%'s Homes" with shape "xxxxzxxxx", "x1234567x", "x89abcdex", "xfghijklx", "xmnopqrsx" and "xxxxxxxxx":
+  if (size of {saryhomes::%{_uuid}%::homes::*} > 28):
+    set {_title} to "%{_p}%'s Homes | Page %{_page}%"
+  else:
+    set {_title} to "%{_p}%'s Homes"
+
+  create gui with virtual chest inventory with 6 rows named {_title} with shape "xxxxzxxxx", "x1234567x", "x89abcdex", "xfghijklx", "xmnopqrsx" and "xxxtxuxxx":
     make gui slot "x" with {_border} named " "
     
     set {_lore::1} to ""
@@ -194,15 +201,26 @@ function homes_gui(p: player, target: player):
     set {_lore::3} to "&7Defaulted Home: %home_getdefault({_p}'s uuid)%"
 
     make gui slot "z" with KNOWLEDGE BOOK named "&aHome Info" with lore {_lore::*}
-    
-    set {_uuid} to uuid of {_target}
-    set {_default} to {saryhomes::%{_uuid}%::default}
 
-    loop {saryhomes::%{_uuid}%::homes::*}:
-      set {_index} to loop-index
-      set {_value} to loop-value
-      set {_icon} to {saryhomes::%{_uuid}%::homes::%{_index}%::icon}
-      set {_location} to {saryhomes::%{_uuid}%::homes::%{_index}%::location}
+    set {_default} to {saryhomes::%{_uuid}%::default}
+    set {_homes::*} to page {_page} of {saryhomes::%{_uuid}%::homes::*} with {@homes_per_page} lines
+
+    if {_page} != 1:
+      make gui slot "t" with ARROW named "&aPrevious Page":
+        homes_gui({_p}, {_target}, {_page} - 1)
+    else:
+      make gui slot "t" with {_border}
+    
+    if (size of {_homes::*} is 28):
+      make gui slot "u" with ARROW named "&aNext Page":
+        homes_gui({_p}, {_target}, {_page} + 1)
+    else:
+      make gui slot "u" with {_border}
+
+    loop {_homes::*}:
+      set {_value} to {saryhomes::%{_uuid}%::homes::%loop-value%}
+      set {_icon} to {saryhomes::%{_uuid}%::homes::%{_value}%::icon}
+      set {_location} to {saryhomes::%{_uuid}%::homes::%{_value}%::location}
       set {_biome} to biome of {_location}
 
       clear {_lore::*}
@@ -234,14 +252,14 @@ function homes_gui(p: player, target: player):
         
         if gui click type is MIDDLE MOUSE BUTTON:
           home_setdefault({_uuid}, {_value})
-          homes_gui({_p}, {_target})
+          homes_gui({_p}, {_target}, 1)
         
         if gui click type is RIGHT MOUSE BUTTON:
-          homes_icons({_p}, {_target}, {_value})
+          homes_icons({_p}, {_target}, {_value}, {_page})
 
   open last gui for {_p}
 
-function homes_icons(p: player, target: player, name: string):
+function homes_icons(p: player, target: player, name: string, page: number):
   create gui with virtual chest inventory with 6 rows named "Choose An Icon (%{_name}%)" with shape "xxxxxxxxx", "x1234567x", "x89abcdex", "xfghijklx", "xmnopqrsx" and "xxxxxxxxx":
     make gui slot "x" with {@gui_border_material} named " "
     
@@ -249,7 +267,7 @@ function homes_icons(p: player, target: player, name: string):
       set {_icon} to loop-value
       make next gui slot with {_icon}:
         change_icon({_target}'s uuid, {_name}, {_icon})
-        homes_gui({_p}, {_target})
+        homes_gui({_p}, {_target}, {_page})
   
   open last gui for {_p}
 

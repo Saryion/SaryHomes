@@ -2,7 +2,7 @@
 
 ![Showcase of Home Icons](https://i.imgur.com/kD98lcF.png)
 # Features
-* Homes system with GUI.
+* Homes system with GUI with pages.
 * You can change the icon for each home in the GUI using right click.
 * `/home` will take you to your default home, which can be set in the GUI by middle clicking a home.
 * View information about your homes, such as it's location and biome it's in.
@@ -30,7 +30,7 @@ There is several options you can change in the scripts file. They are located at
 The only addon this script requires is [Skript-GUI](https://github.com/APickledWalrus/skript-gui) for it's GUI capabilities.
 
 ## TODO
-* **Add pages to the homes gui so you can see more than 28 homes.**
+* Renaming of homes
 
 ## Disclaimer
 I'm currently learning Skript, i'm very new. This is my first real project using it, and it's capabilities are pretty cool. So I know it's probably not as good as it can be, i'll improve in time.
