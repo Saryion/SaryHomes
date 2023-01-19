@@ -2,7 +2,7 @@
 
 ![Showcase of Home Icons](https://i.imgur.com/kD98lcF.png)
 # Features
-* Homes system with GUI
+* Homes system with GUI.
 * You can change the icon for each home in the GUI using right click.
 * `/home` will take you to your default home, which can be set in the GUI by middle clicking a home.
 * View information about your homes, such as it's location and biome it's in.

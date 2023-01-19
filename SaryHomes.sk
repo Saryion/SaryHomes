@@ -2,16 +2,16 @@ options:
   # Messages
   msg_nopermission: "&cYou have no permission to execute this command."
 
-  msg_home_invalid: "&cYou have no home with this name."
+  msg_home_invalid: "&cYou have no home named ($s)."
   msg_home_nodefault: "&cYou have no default home, assign one in the GUI (/homes)"
-  msg_teleporting: "&aTeleporting to home..."
+  msg_teleporting: "&aTeleporting you to your home ($s)..."
   
   msg_sethome_noargs: "&cYou have to specify a name for your new home."
-  msg_sethome_exists: "&cYou already have a home with this name."
-  msg_sethome_success: "&aYour new home has been created."
+  msg_sethome_exists: "&cYou already have a home named ($s)."
+  msg_sethome_success: "&aNew home named ($s) has been created."
 
   msg_delhome_noargs: "&cYou have to specify a name for the home you would like to delete."
-  msg_delhome_success: "&aHome has been deleted."
+  msg_delhome_success: "&aHome ($s) has been deleted."
 
   msg_maxhomes: "&cYou have reached your maximium allowed homes."
 
@@ -63,14 +63,14 @@ command home [<string>]:
         send {@msg_home_nodefault}
         stop
       
-      home_teleport(sender, home_getlocation({_uuid}, {_home}))
+      home_teleport(sender, arg 1, home_getlocation({_uuid}, {_home}))
       stop
     
     if (home_exists({_uuid}, arg 1) is false):
-      send {@msg_home_invalid}
+      send(sender, {@msg_home_invalid}, "$s", arg 1)
       stop
 
-    home_teleport(sender, home_getlocation({_uuid}, arg 1))
+    home_teleport(sender, arg 1, home_getlocation({_uuid}, arg 1))
 
 command sethome [<string>]:
   trigger:
@@ -85,7 +85,7 @@ command sethome [<string>]:
     set {_uuid} to uuid of sender
     
     if (home_exists({_uuid}, arg 1) is true):
-      send {@msg_sethome_exists}
+      send(sender, {@msg_sethome_exists}, "$s", arg 1)
       stop
     
     if (size of {saryhomes::%{_uuid}%::*}) >= maxhomes(sender):
@@ -94,7 +94,7 @@ command sethome [<string>]:
         stop
 
     home_add({_uuid}, arg 1, location of sender)
-    send {@msg_sethome_success}
+    send(sender, {@msg_sethome_success}, "$s", arg 1)
 
 command delhome [<string>]:
   trigger:
@@ -109,11 +109,11 @@ command delhome [<string>]:
     set {_uuid} to uuid of sender
     
     if (home_exists({_uuid}, arg 1) is false):
-      send {@msg_home_invalid}
+      send(sender, {@msg_home_invalid}, "$s", arg 1)
       stop
     
     home_delete({_uuid}, arg 1)
-    send {@msg_delhome_success}
+    send(sender, {@msg_delhome_success}, "$s", arg 1)
 
 command homes [<player>]:
   trigger:
@@ -155,9 +155,9 @@ function home_setdefault(uuid: string, name: string):
 function home_getlocation(uuid: string, name: string) :: location:
   return {saryhomes::%{_uuid}%::%{_name}%::location}
 
-function home_teleport(p: player, location: location):
+function home_teleport(p: player, name: string, location: location):
+  send({_p}, {@msg_teleporting}, "$s", {_name})
   teleport {_p} to {_location}
-  send {@msg_teleporting} to {_p}
 
 function maxhomes(p: player) :: number:
   set {_perms::*} to all permissions of {_p}
@@ -217,7 +217,7 @@ function homes_gui(p: player, target: player):
 
       make next gui slot with {_icon} named {_name} with lore {_lore::*}:
         if gui click type is LEFT MOUSE BUTTON:
-          home_teleport({_p}, {_location})
+          home_teleport({_p}, {_value}, {_location})
         
         if gui click type is MIDDLE MOUSE BUTTON:
           home_setdefault({_uuid}, {_value})
@@ -229,7 +229,7 @@ function homes_gui(p: player, target: player):
   open last gui for {_p}
 
 function homes_icons(p: player, target: player, name: string):
-  create gui with virtual chest inventory with 6 rows named "Pick An Icon (%{_name}%)" with shape "xxxxxxxxx", "x1234567x", "x89abcdex", "xfghijklx", "xmnopqrsx" and "xxxxxxxxx":
+  create gui with virtual chest inventory with 6 rows named "Choose An Icon (%{_name}%)" with shape "xxxxxxxxx", "x1234567x", "x89abcdex", "xfghijklx", "xmnopqrsx" and "xxxxxxxxx":
     make gui slot "x" with BLACK STAINED GLASS PANE named " "
     
     loop {-icons::*}:
@@ -239,3 +239,11 @@ function homes_icons(p: player, target: player, name: string):
         homes_gui({_p}, {_target})
   
   open last gui for {_p}
+
+function send(p: player, msg: string, replace: string = "", replacewith: string = ""):
+  if {_replace} and {_replacewith} is "":
+    send {_msg} to {_p}
+    stop
+  
+  replace all {_replace} with {_replacewith} in {_msg}
+  send {_msg} to {_p}
