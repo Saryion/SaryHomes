@@ -24,7 +24,7 @@
 * `saryhomes.admin`
 
 ### Customization
-There is several options you can change in the scripts file. They are located at the beginning of the file, including messages, permissions and default max homes size. You can also add new icons in the `on load` event using function `add_icon(item name)`.
+There is several options you can change in the scripts file. They are located at the beginning of the file, including messages and permissions. You can also add new icons in the `on load` event using function `add_icon(item name)`.
 
 ## Requirements (Dependencies)
 The only addon this script requires is [Skript-GUI](https://github.com/APickledWalrus/skript-gui) for it's GUI capabilities.

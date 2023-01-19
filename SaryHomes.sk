@@ -94,7 +94,7 @@ command sethome [<string>]:
       send(sender, {@msg_sethome_exists}, "$s", arg 1)
       stop
     
-    if (size of {saryhomes::%{_uuid}%::*}) >= maxhomes(sender):
+    if (size of {saryhomes::%{_uuid}%::homes::*}) >= maxhomes(sender):
       if sender doesn't have permission {@perm_unlimited_homes} or {@perm_admin}:
         send {@msg_maxhomes}
         stop
@@ -139,15 +139,15 @@ command homes [<player>]:
 
 
 function home_add(uuid: string, name: string, location: location):
-  set {saryhomes::%{_uuid}%::%{_name}%} to {_name}
-  set {saryhomes::%{_uuid}%::%{_name}%::location} to {_location}
-  set {saryhomes::%{_uuid}%::%{_name}%::icon} to GRASS BLOCK
+  set {saryhomes::%{_uuid}%::homes::%{_name}%} to {_name}
+  set {saryhomes::%{_uuid}%::homes::%{_name}%::location} to {_location}
+  set {saryhomes::%{_uuid}%::homes::%{_name}%::icon} to GRASS BLOCK
 
 function home_delete(uuid: string, name: string):
-  delete {saryhomes::%{_uuid}%::%{_name}%}
+  delete {saryhomes::%{_uuid}%::homes::%{_name}%}
 
 function home_exists(uuid: string, name: string) :: boolean:
-  if {saryhomes::%{_uuid}%::%{_name}%} is set:
+  if {saryhomes::%{_uuid}%::homes::%{_name}%} is set:
     return true
 
   return false
@@ -159,7 +159,7 @@ function home_setdefault(uuid: string, name: string):
   set {saryhomes::%{_uuid}%::default} to {_name}
 
 function home_getlocation(uuid: string, name: string) :: location:
-  return {saryhomes::%{_uuid}%::%{_name}%::location}
+  return {saryhomes::%{_uuid}%::homes::%{_name}%::location}
 
 function home_teleport(p: player, name: string, location: location):
   send({_p}, {@msg_teleporting}, "$s", {_name})
@@ -180,25 +180,32 @@ function maxhomes(p: player) :: number:
   return 0
 
 function change_icon(uuid: string, name: string, icon: item):
-  set {saryhomes::%{_uuid}%::%{_name}%::icon} to {_icon}
+  set {saryhomes::%{_uuid}%::homes::%{_name}%::icon} to {_icon}
 
 function homes_gui(p: player, target: player):
   set {_rows} to 6
   set {_border} to {@gui_border_material} named " "
   
-  create gui with virtual chest inventory with 6 rows named "%{_p}%'s Homes" with shape "xxxxxxxxx", "x1234567x", "x89abcdex", "xfghijklx", "xmnopqrsx" and "xxxxxxxxx":
+  create gui with virtual chest inventory with 6 rows named "%{_p}%'s Homes" with shape "xxxxzxxxx", "x1234567x", "x89abcdex", "xfghijklx", "xmnopqrsx" and "xxxxxxxxx":
     make gui slot "x" with {_border} named " "
+    
+    set {_lore::1} to ""
+    set {_lore::2} to "&7Owned: %size of {saryhomes::%{_p}'s uuid%::homes::*}% / %maxhomes({_p})%"
+    set {_lore::3} to "&7Defaulted Home: %home_getdefault({_p}'s uuid)%"
+
+    make gui slot "z" with KNOWLEDGE BOOK named "&aHome Info" with lore {_lore::*}
     
     set {_uuid} to uuid of {_target}
     set {_default} to {saryhomes::%{_uuid}%::default}
 
-    loop {saryhomes::%{_uuid}%::*}:
+    loop {saryhomes::%{_uuid}%::homes::*}:
       set {_index} to loop-index
       set {_value} to loop-value
-      set {_icon} to {saryhomes::%{_uuid}%::%{_index}%::icon}
-      set {_location} to {saryhomes::%{_uuid}%::%{_index}%::location}
+      set {_icon} to {saryhomes::%{_uuid}%::homes::%{_index}%::icon}
+      set {_location} to {saryhomes::%{_uuid}%::homes::%{_index}%::location}
       set {_biome} to biome of {_location}
 
+      clear {_lore::*}
       set {_lore::1} to ""
       set {_lore::2} to "&fLocation:"
       set {_lore::3} to " &7X: %x coord of {_location}%"
