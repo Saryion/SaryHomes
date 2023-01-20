@@ -103,7 +103,7 @@ command sethome [<string>]:
       send(sender, {@msg_sethome_exists}, "$s", arg 1)
       stop
     
-    if (size of {saryhomes::%{_uuid}%::homes::*}) >= maxhomes(sender):
+    if (home_total({_uuid}) >= home_max(sender)):
       if sender doesn't have permission {@perm_unlimited_homes} or {@perm_admin}:
         send {@msg_maxhomes}
         stop
@@ -146,6 +146,8 @@ command homes [<player>]:
     
     homes_gui(sender, arg 1, 1)
 
+function home_get(uuid: string, name: string) :: string:
+  return {saryhomes::%{_uuid}%::homes::%{_name}%}
 
 function home_add(uuid: string, name: string, location: location):
   set {saryhomes::%{_uuid}%::homes::%{_name}%} to {_name}
@@ -161,6 +163,9 @@ function home_exists(uuid: string, name: string) :: boolean:
 
   return false
 
+function home_total(uuid: string) :: number:
+  return (size of {saryhomes::%{_uuid}%::homes::*}) ? 0
+
 function home_getdefault(uuid: string) :: string:
   return {saryhomes::%{_uuid}%::default}
 
@@ -174,7 +179,7 @@ function home_teleport(p: player, name: string, location: location):
   send({_p}, {@msg_teleporting}, "$s", {_name})
   teleport {_p} to {_location}
 
-function maxhomes(p: player) :: number:
+function home_max(p: player) :: number:
   set {_perms::*} to all permissions of {_p}
 
   loop {_perms::*}:
@@ -188,7 +193,10 @@ function maxhomes(p: player) :: number:
   
   return 0
 
-function change_icon(uuid: string, name: string, icon: item):
+function home_geticon(uuid: string, name: string) :: item:
+  return {saryhomes::%{_uuid}%::homes::%{_name}%::icon}
+
+function home_change_icon(uuid: string, name: string, icon: item):
   set {saryhomes::%{_uuid}%::homes::%{_name}%::icon} to {_icon}
 
 function homes_gui(p: player, target: player, page: number):
@@ -196,7 +204,7 @@ function homes_gui(p: player, target: player, page: number):
   set {_rows} to 6
   set {_border} to {@gui_border_material} named " "
   
-  if (size of {saryhomes::%{_uuid}%::homes::*} > {@homes_per_page}):
+  if (home_total({_uuid}) > {@homes_per_page}):
     set {_title} to "%{_p}%'s Homes | Page %{_page}%"
   else:
     set {_title} to "%{_p}%'s Homes"
@@ -209,14 +217,14 @@ function homes_gui(p: player, target: player, page: number):
     if {_p} has permission {@perm_unlimited_homes} or {@perm_admin}:
       set {_maxhomes} to "Unlimited"
     else:
-      set {_maxhomes} to "%maxhomes({_p})%"
-    set {_lore::2} to "&7Owned: %size of {saryhomes::%{_p}'s uuid%::homes::*}% / %{_maxhomes}%"
-    
-    set {_lore::3} to "&7Defaulted Home: %home_getdefault({_p}'s uuid)%"
+      set {_maxhomes} to "%home_max({_p})%"
+      
+    set {_lore::2} to "&7Owned: %home_total({_uuid})% / %{_maxhomes}%"
+    set {_lore::3} to "&7Defaulted: %home_getdefault({_p}'s uuid)%"
 
     make gui slot "z" with KNOWLEDGE BOOK named "&aHome Info" with lore {_lore::*}
 
-    set {_default} to {saryhomes::%{_uuid}%::default}
+    set {_default} to home_getdefault({_uuid})
     set {_homes::*} to page {_page} of {saryhomes::%{_uuid}%::homes::*} with {@homes_per_page} lines
 
     if {_page} != 1:
@@ -232,9 +240,9 @@ function homes_gui(p: player, target: player, page: number):
       make gui slot "u" with {_border}
 
     loop {_homes::*}:
-      set {_value} to {saryhomes::%{_uuid}%::homes::%loop-value%}
-      set {_icon} to {saryhomes::%{_uuid}%::homes::%{_value}%::icon}
-      set {_location} to {saryhomes::%{_uuid}%::homes::%{_value}%::location}
+      set {_name} to home_get({_uuid}, loop-value)
+      set {_icon} to home_geticon({_uuid}, {_name})
+      set {_location} to home_getlocation({_uuid}, {_name})
       set {_biome} to biome of {_location}
 
       clear {_lore::*}
@@ -250,26 +258,26 @@ function homes_gui(p: player, target: player, page: number):
       set {_lore::10} to "&aActions:"
       set {_lore::11} to " &7L-Click: Goto"
 
-      if {_default} isn't {_value}:
+      if {_default} isn't {_name}:
         set {_lore::12} to " &7M-Click: Make Default"
 
       set {_lore::13} to " &7R-Click: Change Icon"
 
-      if {_default} is {_value}:
-        set {_name} to "&aHome: %{_value}% &7(DEFAULT)"
+      if {_default} is {_name}:
+        set {_title} to "&6%{_name}% &7(DEFAULT)"
       else:
-        set {_name} to "&aHome: %{_value}%"
+        set {_title} to "&6%{_name}%"
 
-      make next gui slot with {_icon} named {_name} with lore {_lore::*}:
+      make next gui slot with {_icon} named {_title} with lore {_lore::*}:
         if gui click type is LEFT MOUSE BUTTON:
-          home_teleport({_p}, {_value}, {_location})
+          home_teleport({_p}, {_name}, {_location})
         
         if gui click type is MIDDLE MOUSE BUTTON:
-          home_setdefault({_uuid}, {_value})
+          home_setdefault({_uuid}, {_name})
           homes_gui({_p}, {_target}, {_page})
         
         if gui click type is RIGHT MOUSE BUTTON:
-          homes_icons({_p}, {_target}, {_value}, {_page}, 1)
+          homes_icons({_p}, {_target}, {_name}, {_page}, 1)
 
   open last gui for {_p}
 
@@ -278,9 +286,9 @@ function homes_icons(p: player, target: player, name: string, homespage: number,
   set {_border} to {@gui_border_material} named " "
   
   if (size of {-icons::*} > {@icons_per_page}):
-    set {_title} to "Choose An Icon (%{_name}%) | Page %{_page}%"
+    set {_title} to "Icons (%{_name}%) | Page %{_page}%"
   else:
-    set {_title} to "Choose An Icon (%{_name}%)"
+    set {_title} to "Icons (%{_name}%)"
 
   create gui with virtual chest inventory with {_rows} rows named {_title} with shape "xxxxxxxxx", "x1234567x", "x89abcdex", "xfghijklx", "xmnopqrsx" and "xxxtxuxxx":
     make gui slot "x" with {_border} named " "
@@ -302,7 +310,7 @@ function homes_icons(p: player, target: player, name: string, homespage: number,
     loop {_icons::*}:
       set {_icon} to loop-value
       make next gui slot with {_icon}:
-        change_icon({_target}'s uuid, {_name}, {_icon})
+        home_change_icon({_target}'s uuid, {_name}, {_icon})
         homes_gui({_p}, {_target}, {_homespage})
   
   open last gui for {_p}
