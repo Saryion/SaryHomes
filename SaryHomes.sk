@@ -23,6 +23,10 @@ options:
   perm_unlimited_homes: "saryhomes.unlimited"
   perm_admin: "saryhomes.admin"
 
+  sound_home_teleport: "ENTITY_ILLUSIONER_MIRROR_MOVE"
+  sound_home_iconchange: "ENTITY_EXPERIENCE_ORB_PICKUP"
+  sound_home_defaulted: "ENTITY_ARMOR_STAND_HIT"
+
   gui_border_material: BLACK STAINED GLASS PANE
   homes_per_page: 28
   icons_per_page: 28
@@ -178,6 +182,7 @@ function home_getlocation(uuid: string, name: string) :: location:
 function home_teleport(p: player, name: string, location: location):
   send({_p}, {@msg_teleporting}, "$s", {_name})
   teleport {_p} to {_location}
+  play sound {@sound_home_teleport} at {_p}'s location
 
 function home_max(p: player) :: number:
   set {_perms::*} to all permissions of {_p}
@@ -274,6 +279,7 @@ function homes_gui(p: player, target: player, page: number):
         
         if gui click type is MIDDLE MOUSE BUTTON:
           home_setdefault({_uuid}, {_name})
+          play sound {@sound_home_defaulted} to {_p}
           homes_gui({_p}, {_target}, {_page})
         
         if gui click type is RIGHT MOUSE BUTTON:
@@ -311,6 +317,7 @@ function homes_icons(p: player, target: player, name: string, homespage: number,
       set {_icon} to loop-value
       make next gui slot with {_icon}:
         home_change_icon({_target}'s uuid, {_name}, {_icon})
+        play sound {@sound_home_iconchange} with pitch 2 to {_p}
         homes_gui({_p}, {_target}, {_homespage})
   
   open last gui for {_p}
