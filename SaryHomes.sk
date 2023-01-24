@@ -159,6 +159,9 @@ function home_add(uuid: string, name: string, location: location):
   set {saryhomes::%{_uuid}%::homes::%{_name}%::icon} to GRASS BLOCK
 
 function home_delete(uuid: string, name: string):
+  if {saryhomes::%{_uuid}%::default} is {_name}:
+    delete {saryhomes::%{_uuid}%::default}
+
   delete {saryhomes::%{_uuid}%::homes::%{_name}%}
 
 function home_exists(uuid: string, name: string) :: boolean:
